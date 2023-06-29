@@ -1,32 +1,28 @@
-from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+from sqlalchemy_serializer import SerializerMixin
 
-from app import app
-from models import db, Message
+metadata = MetaData(naming_convention={
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+})
 
-class TestMessage:
-    '''Message model in models.py'''
+db = SQLAlchemy(metadata=metadata)
 
-    with app.app_context():
-        m = Message.query.filter(
-            Message.body == "Hello 👋"
-            ).filter(Message.username == "Liza")
+class Message(db.Model, SerializerMixin):
+    __tablename__ = 'messages'
 
-        for message in m:
-            db.session.delete(message)
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String)
+    username = db.Column(db.String)
 
-        db.session.commit()
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    def test_has_correct_columns(self):
-        '''has columns for message body, username, and creation time.'''
-        with app.app_context():
-
-            hello_from_liza = Message(
-                body="Hello 👋",
-                username="Liza")
-            
-            db.session.add(hello_from_liza)
-            db.session.commit()
-
-            assert(hello_from_liza.body == "Hello 👋")
-            assert(hello_from_liza.username == "Liza")
-            assert(type(hello_from_liza.created_at) == datetime)
+    def __repr__(self):
+        return f'''
+        id: {self.id}
+        body: {self.body}
+        username: {self.username}
+        created_at: {self.created_at}
+        updated_at: {self.updated_at}
+        '''
